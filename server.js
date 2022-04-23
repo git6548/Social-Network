@@ -98,93 +98,149 @@ app.delete('/api/users/:id', ({ params }, res) => {
 // POST to add a new friend to a user's friend list
 app.post("/api/users/:userId/friends/:friendId", (req, res) => {
     User.findOneAndUpdate(
-        { _id: req.params.userId }, 
-        { $addToSet: { friends: req.params.friendId}},
-        { new: true }
-        ).then((dbUser) => {
-            if (!dbUser) {
-                return res.status(404).json({message: "User not found"})
+        { _id: req.params.userId },
+        { $addToSet: { friends: { friendId: req.params.friendId } } },
+        { runValidators: true, new: true }
+    )
+    .then((dbUser) => {
+        if (!dbUser) {
+            return res.status(404).json({ message: "User not found" });
+        }
+        res.json(dbUser);
+    })
+        .catch(err => {
+            res.json(err);
+        });
+});
+// DELETE to remove a friend from a user's friend list
+app.delete('/api/users/:userId/friends/:friendId', (req, res) => {
+    User.findOneAndUpdate(
+      { _id: req.params.userId },
+      { $pull: { friends: { friendId: req.params.friendId } } },
+      { runValidators: true, new: true }
+    )
+      .then(dbUser => {
+        if (!dbUser) {
+          return res.status(404).json({ message: 'No friend with this id!' });
+        }
+        res.json(dbUser);
+      })
+      .catch(err => {
+        console.log(err);
+        res.status(500).json(err);
+      });
+  });
+
+
+// /api/thoughts
+// GET to get all thoughts
+app.get("/api/thoughts", (req, res) => {
+    Thought.find({})
+        .then(dbThought => {
+            console.log(typeof dbThought)
+            res.json(dbThought);
+        })
+        .catch(err => {
+            console.error(err);
+            res.json(err);
+        });
+});
+// GET to get a single thought by its _id
+app.get("/api/thoughts/:id", (req, res) => {
+    Thought.findOne({ _id: req.params.id })
+        .then((dbThought) => {
+            if (!dbThought) {
+                return res.status(404)
             }
+            res.json(dbThought);
         })
         .catch(err => {
             res.json(err);
         });
-}); 
-// DELETE to remove a friend from a user's friend list
+});
 
-// /api/thoughts
-// GET to get all thoughts
-// GET to get a single thought by its _id
+//i'm not sure how to tie the username part of this
 // POST to create a new thought (don't forget to push the created thought's _id to the associated user's thoughts array field)
+app.post("/api/thoughts", ({ body }, res) => {
+    Thought.create(body)
+        .then(dbThought => {
+            res.json(dbThought);
+        })
+        .catch(err => {
+            res.json(err);
+        });
+
+});
+
 // PUT to update a thought by its _id
+app.post('/api/thoughts/:id', ({ params, body }, res) => {
+    Thought.findOneAndUpdate({ _id: params.id }, body, { new: true })
+        .then(dbThought => {
+            if (!dbThought) {
+                res.json({ message: 'No thought found with this id!' });
+                return;
+            }
+            res.json(dbThought);
+        })
+        .catch(err => {
+            res.json(err);
+        });
+});
+
 // DELETE to remove a thought by its _id
+app.delete('/api/thoughts/:id', ({ params }, res) => {
+    Thought.findOneAndDelete({ _id: params.id })
+        .then(dbThought => {
+            if (!dbThought) {
+                res.json({ message: 'No thought found with this id!' });
+                return;
+            }
+            res.json(dbThought);
+        })
+        .catch(err => {
+            res.json(err);
+        });
+});
+
 
 // /api/thoughts/:thoughtId/reactions
 // POST to create a reaction stored in a single thought's reactions array field
+app.post('/api/thoughts/:thoughtId/reactions', (req, res) => {
+    Thought.findOneAndUpdate(
+      { _id: req.params.thoughtId },
+      { $addToSet: { reactions: req.body } },
+      { runValidators: true, new: true }
+    )
+      .then(dbThought => {
+        if (!dbThought) {
+          return res.status(404).json({ message: 'No thought with this id!' });
+        }
+        res.json(dbThought);
+      })
+      .catch(err => {
+        console.log(err);
+        res.status(500).json(err);
+      });
+  });
+
 // DELETE to pull and remove a reaction by the reaction's reactionId value
-
-
-
-
-
-
-
-
-
-// app.post("/submit", ({body}, res) => {
-
-//   Note.create(body)
-//    .then(dbNote => {
-//      res.json(dbNote);
-//    })
-//    .catch(err => {
-//      res.json(err);
-//    });
-
-// });
-
-
-// app.get('/all', (req, res) => {
-//   Note.find({})
-//   .then(dbNote => {
-//     res.json(dbNote);
-//   })
-//   .catch(err => {
-//     res.json(err);
-//   });
-// });
-
-
-// app.post('/update/:id', ({ params, body }, res) => {
-//   Note.findOneAndUpdate({ _id: params.id }, body, { new: true })
-//     .then(dbNote => {
-//       if (!dbNote) {
-//         res.json({ message: 'No note found with this id!' });
-//         return;
-//       }
-//       res.json(dbNote);
-//     })
-//     .catch(err => {
-//       res.json(err);
-//     });
-// });
-
-
-// app.delete('/delete/:id', ({ params }, res) => {
-//   Note.findOneAndDelete({ _id: params.id })
-//     .then(dbNote => {
-//       if (!dbNote) {
-//         res.json({ message: 'No note found with this id!' });
-//         return;
-//       }
-//       res.json(dbNote);
-//     })
-//     .catch(err => {
-//       res.json(err);
-//     });
-// });
-
-
+app.delete('/api/thoughts/:thoughtId/reactions/:reactionId', (req, res) => {
+    Thought.findOneAndUpdate(
+      { _id: req.params.thoughtId },
+      { $pull: { reactions: { reactionId: req.params.reactionId } } },
+      { runValidators: true, new: true }
+    )
+      .then(dbThought => {
+        if (!dbThought) {
+          return res.status(404).json({ message: 'No thought with this id!' });
+        }
+        res.json(dbThought);
+      })
+      .catch(err => {
+        console.log(err);
+        res.status(500).json(err);
+      });
+  });
 
 db.once('open', () => {
     app.listen(PORT, () => {
