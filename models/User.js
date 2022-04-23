@@ -1,4 +1,5 @@
 const { Schema, model, Types } = require('mongoose');
+// const Thought = require('./Thought');
 
 const UserSchema = new Schema({
     username: {
@@ -19,7 +20,6 @@ const UserSchema = new Schema({
             ref: 'Thought'
         }
     ],
-    // not totally sure about this one
     friends: [
         {
             type: Schema.Types.ObjectId,

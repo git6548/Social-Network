@@ -65,7 +65,7 @@ app.post("/api/users", ({ body }, res) => {
 });
 
 // PUT to update a user by its _id
-app.post('/api/users/:id', ({ params, body }, res) => {
+app.put('/api/users/:id', ({ params, body }, res) => {
     User.findOneAndUpdate({ _id: params.id }, body, { new: true })
         .then(dbUser => {
             if (!dbUser) {
