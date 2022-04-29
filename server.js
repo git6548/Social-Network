@@ -38,8 +38,17 @@ app.get("/api/users", (req, res) => {
 // GET a single user by its _id and populated thought and friend data
 app.get("/api/users/:id", (req, res) => {
     User.findOne({ _id: req.params.id })
-        .populate('friends')
-        .populate('thoughts')
+        // .populate('friends')
+        // .populate('thoughts')
+        // trying this instead
+        .populate({
+            path: 'users',
+            select: '-__v'
+          })
+          .populate({
+            path: 'thoughts',
+            select: '-__v'
+          })
         .then((dbUser) => {
             //console.log(dbUser)
             if (!dbUser) {

@@ -25,11 +25,15 @@ const ReactionSchema = new Schema(
     },
     {
         toJSON: {
-            getters: true
-        }
+            virtuals: true
+        },
+        id: false
     }
 );
-
+//this part isn't working
+// UserSchema.virtual('reactionCount').get(function () {
+//     return this.replies?.length || 0;
+// });
 
 const ThoughtSchema = new Schema({
     thoughtText: {
