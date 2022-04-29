@@ -1,4 +1,5 @@
 const express = require('express');
+const req = require('express/lib/request');
 const mongoose = require('mongoose');
 
 const app = express();
@@ -25,7 +26,7 @@ mongoose.set('debug', true);
 // /api/users
 // get all users
 app.get("/api/users", (req, res) => {
-    User.find({})
+    User.find({}).populate('thoughts')
         .then(dbUser => {
             console.log(typeof dbUser)
             res.json(dbUser);
@@ -36,23 +37,23 @@ app.get("/api/users", (req, res) => {
         });
 });
 // GET a single user by its _id and populated thought and friend data
-app.get("/api/users/:id", (req, res) => {
-    User.findOne({ _id: req.params.id })
+app.get("/api/users/:userId", (req, res) => {
+    User.findOne({ _id: req.params.userId })
         // .populate('friends')
         // .populate('thoughts')
         // trying this instead
-        .populate({
-            path: 'users',
-            select: '-__v'
-          })
-          .populate({
-            path: 'thoughts',
-            select: '-__v'
-          })
+        // .populate({
+        //     path: 'users',
+        //     select: '-__v'
+        //   })
+        //   .populate({
+        //     path: 'thoughts',
+        //     select: '-__v'
+        //   })
         .then((dbUser) => {
-            //console.log(dbUser)
+          //  console.log(dbUser)
             if (!dbUser) {
-                return res.status(404)
+                return res.status(404).json({mesage: 'User not found'})
             }
             res.json(dbUser);
         })
@@ -108,7 +109,7 @@ app.delete('/api/users/:id', ({ params }, res) => {
 app.post("/api/users/:userId/friends/:friendId", (req, res) => {
     User.findOneAndUpdate(
         { _id: req.params.userId },
-        { $addToSet: { friends: { friendId: req.params.friendId } } },
+        { $addToSet: { friends:  req.params.friendId } },
         { runValidators: true, new: true }
     )
     .then((dbUser) => {
@@ -170,11 +171,23 @@ app.get("/api/thoughts/:id", (req, res) => {
 
 //i'm not sure how to tie the username part of this
 // POST to create a new thought (don't forget to push the created thought's _id to the associated user's thoughts array field)
-app.post("/api/thoughts", ({ body }, res) => {
+app.post("/api/thoughts/", ({ body }, res) => {
     Thought.create(body)
         .then(dbThought => {
-            res.json(dbThought);
+            console.log(dbThought)
+            return User.findOneAndUpdate(
+                {_id: body.userId},
+                {$push: {thoughts: dbThought._id}},
+                {new: true}
+            )
         })
+        .then((dbUser => {
+            if(!dbUser){
+                return res.status(404).json({message: "User not found"})
+            }
+            console.log(dbUser)
+            res.json(dbUser);
+        }))
         .catch(err => {
             res.json(err);
         });
