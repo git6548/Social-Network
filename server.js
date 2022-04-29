@@ -126,7 +126,7 @@ app.post("/api/users/:userId/friends/:friendId", (req, res) => {
 app.delete('/api/users/:userId/friends/:friendId', (req, res) => {
     User.findOneAndUpdate(
       { _id: req.params.userId },
-      { $pull: { friends: { friendId: req.params.friendId } } },
+      { $pull: { friends: req.params.friendId }  },
       { runValidators: true, new: true }
     )
       .then(dbUser => {
@@ -195,7 +195,7 @@ app.post("/api/thoughts/", ({ body }, res) => {
 });
 
 // PUT to update a thought by its _id
-app.post('/api/thoughts/:id', ({ params, body }, res) => {
+app.put('/api/thoughts/:id', ({ params, body }, res) => {
     Thought.findOneAndUpdate({ _id: params.id }, body, { new: true })
         .then(dbThought => {
             if (!dbThought) {
@@ -249,7 +249,7 @@ app.post('/api/thoughts/:thoughtId/reactions', (req, res) => {
 app.delete('/api/thoughts/:thoughtId/reactions/:reactionId', (req, res) => {
     Thought.findOneAndUpdate(
       { _id: req.params.thoughtId },
-      { $pull: { reactions: { reactionId: req.params.reactionId } } },
+      { $pull: { reactions: req.params.reactionId } },
       { runValidators: true, new: true }
     )
       .then(dbThought => {
